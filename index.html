@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="http://d3js.org/d3.v7.min.js" charset="utf-8"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+</head>
+
+<body>
+    <div></div>
+    <script>
+        var width = 1800;
+        var height = 1000;
+
+        var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .style("background", "white");
+
+        var g = svg.append("g");
+
+        var projection = d3.geoEquirectangular()
+            .center([-60, 50])
+            .scale(200)
+            ;
+
+        var path = d3.geoPath()
+            .projection(projection);
+
+
+        d3.json("countries.json").then(function (world, error) {
+
+            if (error) throw error;
+
+            var data = topojson.feature(world, world.objects.countries);
+            var countries = g.selectAll("path.country")
+                .data(data.features)
+                .enter()
+                .append("path")
+                .attr("class", "country")
+                .attr("id", function (d) { return d.id; })
+                .attr("d", path)
+                .style("fill", "blue")
+                .style("stroke", "gray")
+                .style("stroke-width", 1)
+                .style("stroke-opacity", 1);
+        });
+
+
+    </script>
+</body>
+
+</html>
