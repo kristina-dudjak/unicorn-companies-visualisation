@@ -13,9 +13,9 @@
         var height = 1000;
 
         var svg = d3.select("body").append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .style("background", "white");
+            .attr("viewBox", [0, 0, width, height])
+            .style("background", "white")
+            ;
 
         var g = svg.append("g");
 
@@ -27,25 +27,47 @@
         var path = d3.geoPath()
             .projection(projection);
 
+        const handleZoom = (e) => g.attr('transform', e.transform);
+
+        const zoom = d3.zoom().on('zoom', handleZoom);
+
+        d3.select('svg').call(zoom);
 
         d3.json("countries.json").then(function (world, error) {
 
             if (error) throw error;
 
             var data = topojson.feature(world, world.objects.countries);
-            var countries = g.selectAll("path.country")
+
+            var countries = g.append("g")
+                .style("fill", "blue")
+                .selectAll("path.country")
                 .data(data.features)
                 .enter()
                 .append("path")
                 .attr("class", "country")
                 .attr("id", function (d) { return d.id; })
                 .attr("d", path)
-                .style("fill", "blue")
                 .style("stroke", "gray")
                 .style("stroke-width", 1)
-                .style("stroke-opacity", 1);
-        });
+                .style("stroke-opacity", 1)
+                .on("click", zoomCountry)
+                ;
 
+            function zoomCountry(e, d) {
+
+                const [[x0, y0], [x1, y1]] = path.bounds(d);
+                var scale_rate = Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height));
+                zoom.scaleBy(
+                    g.transition().duration(750)
+                        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + scale_rate + ")translate(" + -(x0 + x1) / 2 + "," + -(y0 + y1) / 2 + ")")
+                        .transition()
+                        .delay(2000)
+                        .attr("transform", "translate(" + width + "," + height + ")scale(" + 1 + ")translate(" + width + "," + height + ")")
+                    ,
+                    1)
+            }
+        });
 
     </script>
 </body>
