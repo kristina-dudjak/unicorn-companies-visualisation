@@ -2,15 +2,35 @@
 <html>
 
 <head>
+    <link rel="stylesheet" href="style.css">
     <script src="http://d3js.org/d3.v7.min.js" charset="utf-8"></script>
     <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
+    <div class="title">Tvrtke jednorozi</div>
+
+    <div class="container__main" height="1000">
+        <svg class="container__main__svg" viewBox="50 50 1300 700" width="800" height="600"></svg>
+        <div class="container__main__graphs" width="900">
+            <canvas class="chart" width="700" height="300"></canvas>
+        </div>
+    </div>
+
     <script type="module">
 
-        d3.select('body').style("background", "gray");
+        var svg = d3.select(".container__main__svg");
 
+        var g = svg.append("g");
+
+        var projection = d3.geoEquirectangular()
+            .center([-60, 40])
+            .scale(200)
+            ;
+
+        var path = d3.geoPath()
+            .projection(projection);
 
         var width = 2000;
         var height = 750;
@@ -62,21 +82,6 @@
             .domain([0, getMax()])
             .range(["white", "green"]);
 
-        var svg = d3.select("body").append("svg")
-            .attr("viewBox", [0, 0, width, height])
-            .style("background", "white")
-            ;
-
-        var g = svg.append("g");
-
-        var projection = d3.geoEquirectangular()
-            .center([-60, 40])
-            .scale(200)
-            ;
-
-        var path = d3.geoPath()
-            .projection(projection);
-
         const handleZoom = (e) => g.attr('transform', e.transform);
 
         const zoom = d3.zoom().on('zoom', handleZoom);
@@ -105,14 +110,72 @@
                 .style("stroke", "darkgray")
                 .style("stroke-width", 1)
                 .style("stroke-opacity", 1)
-                .on("click", zoomCountry)
+                .on("click", (e, d) => {
+                    zoomCountry(e, d);
+                    updateNumberOfCompaniesChart(e, d);
+                })
                 ;
+
+                const labels = [
+                    '2011',
+                    '2012',
+                    '2013',
+                    '2014',
+                    '2015',
+                    '2016',
+                    '2017',
+                    '2018',
+                    '2019',
+                    '2020',
+                    '2021',
+                    '2022'
+                ];
+
+                var chartDescription = 'Number of joined companies per year';
+
+                var numbersPerYear = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+                var chartData = {
+                    labels: labels,
+                    datasets: [{
+                        label: chartDescription,
+                        backgroundColor: 'rgb(255, 99, 132)',
+                        borderColor: 'rgb(255, 99, 132)',
+                        data: numbersPerYear,
+                    }]
+                };
+                var config = {
+                    type: 'line',
+                    data: chartData,
+                    options: {}
+                };
+                var myChart = new Chart(
+                    document.getElementsByClassName("chart"),
+                    config
+                );
+
+            function updateNumberOfCompaniesChart(e, d) {
+                
+                numbersPerYear = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+                chartDescription = 'Number of joined companies in ' + d.properties.name + ' per year';
+
+                for (let i = 0; i < labels.length; i++) {
+                    companies.forEach(element => {
+                    if (element.Country == d.properties.name && element.dateJoined.split("/").pop() == labels[i]) {
+                        numbersPerYear[i] = numbersPerYear[i] + 1;
+                    }
+                });
+                }
+                chartData.datasets[0].label = chartDescription;
+                chartData.datasets[0].data = numbersPerYear;
+                myChart.update();
+            }
 
             function zoomCountry(e, d) {
 
                 companies.forEach(element => {
                     if (element.Country == d.properties.name) {
-                        console.log(element);
                     }
                 });
                 console.log(d.properties.name);
@@ -135,16 +198,16 @@
                 .style("display", "flex")
                 .style("justify-content", "space-between");
 
-                var min = legend.append('span')
+            var min = legend.append('span')
                 .text('0')
                 .style("padding", "0px 0px 0px 10px");
-                
-                var max = legend.append('span')
+
+            var max = legend.append('span')
                 .text(getMax())
                 .style("padding", "0px 10px 0px 0px")
                 ;
 
-            
+
         });
 
 

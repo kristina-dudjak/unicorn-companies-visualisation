@@ -1,0 +1,14 @@
+.title {
+    font-size: 20px;
+}
+
+.container__main {
+    display: flex;
+    flex-direction: row;
+}
+
+.container__main__graphs {
+    display: flex;
+    flex-direction: column;
+}
+
