@@ -1,5 +1,15 @@
+.header {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid gray;
+}
+
 .title {
     font-size: 20px;
+    align-self: center;
+    color: purple;
+    text-transform: uppercase;
+    
 }
 
 .container__main {
@@ -7,8 +17,36 @@
     flex-direction: row;
 }
 
+.container__main__svg {
+    background: #c4bcc4;
+    margin: 10px 0px;
+}
+
 .container__main__graphs {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+}
+
+.scrollable__container {
+    display: flex;
+    min-height: 200px;
+    max-height: 300px;
+    overflow-y: scroll;
+    verflow-x: scroll;
+    border: 1px solid pink;
+    margin: 10px;
+}
+
+.scrollable__container__names, .scrollable__container__industries, .scrollable__container__valuation, .scrollable__container__raised {
     display: flex;
     flex-direction: column;
 }
 
+p {
+    margin: 0px 2px;
+}
+
+span {
+    font-size: 16px;
+}
