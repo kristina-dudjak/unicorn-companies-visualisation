@@ -22,31 +22,48 @@
     margin: 10px 0px;
 }
 
-.container__main__graphs {
+.container__companies {
     display: flex;
     flex-direction: column;
     margin: 10px;
 }
 
-.scrollable__container {
+.container__companies__charts {
     display: flex;
-    min-height: 200px;
+    flex-direction: row;
+    margin: 10px;
+}
+
+.joined__companies__chart {
+    max-width: 400px;
     max-height: 300px;
+}
+
+.industries__chart {
+    max-width: 300px;
+    max-height: 300px;
+}
+
+.container__companies__table {
+    display: flex;
+    max-height: 260px;
     overflow-y: scroll;
     verflow-x: scroll;
     border: 1px solid pink;
     margin: 10px;
 }
 
-.scrollable__container__names, .scrollable__container__industries, .scrollable__container__valuation, .scrollable__container__raised {
+.table__names, .table__industries, .table__valuation, .table__raised {
     display: flex;
     flex-direction: column;
 }
 
-p {
-    margin: 0px 2px;
+span {
+    font-size: 15px;
 }
 
-span {
-    font-size: 16px;
+p {
+    margin: 0px 20px;
 }
+
+

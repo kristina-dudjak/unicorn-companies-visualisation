@@ -14,24 +14,28 @@
         <span class="title">Unicorn companies</span>
     </div>
     <div class="container__main" height="1000">
-        <svg class="container__main__svg" viewBox="50 50 1300 700" width="800" height="600"></svg>
-        <div class="container__main__graphs" width="900">
-            <canvas class="chart" width="700" height="300"></canvas>
-            <div class="scrollable__container">
-                <div class="scrollable__container__names">
+        <svg class="container__main__svg" viewBox="50 50 1300 700" width="700" height="600"></svg>
+        <div class="container__companies">
+            <div class="container__companies__charts" width="900">
+                <canvas class="joined__companies__chart" width="400" height="300"></canvas>
+                <canvas class="industries__chart" width="400" height="300"></canvas>
+            </div>
+            <div class="container__companies__table">
+                <div class="table__names">
                     <p>Names</p>
                 </div>
-                <div class="scrollable__container__industries">
+                <div class="table__industries">
                     <p>Industries</p>
                 </div>
-                <div class="scrollable__container__valuation">
+                <div class="table__valuation">
                     <p>Valuation ($B)</p>
                 </div>
-                <div class="scrollable__container__raised">
+                <div class="table__raised">
                     <p>Total raised</p>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script type="module">
@@ -42,8 +46,7 @@
 
         var projection = d3.geoEquirectangular()
             .center([-60, 40])
-            .scale(200)
-            ;
+            .scale(150);
 
         var path = d3.geoPath()
             .projection(projection);
@@ -78,7 +81,6 @@
                 };
                 companiesByCountry.push(country);
             }
-
             if (e.Country == country.name) {
                 country.count++;
             }
@@ -94,9 +96,10 @@
             return max;
         }
 
-        var color = d3.scaleSqrt()
+        var color = d3.scalePow()
+            .exponent(0.25)
             .domain([0, getMax()])
-            .range(["white", "green"]);
+            .range(["white", "#018001"]);
 
         const handleZoom = (e) => g.attr('transform', e.transform);
 
@@ -121,7 +124,7 @@
                 .style("fill", function (d) {
                     const companies = getCompaniesByCountry(d.properties.name);
                     if (companies) return color(companies.count);
-                    else return "gray";
+                    else return "#8a8787";
                 })
                 .style("stroke", "darkgray")
                 .style("stroke-width", 1)
@@ -129,11 +132,12 @@
                 .on("click", (e, d) => {
                     zoomCountry(e, d);
                     updateNumberOfCompaniesChart(e, d);
+                    updateNumberOfIndustriesChart(e, d);
                     listCompanies(e, d);
                 })
                 ;
 
-            const labels = [
+            const years = [
                 '2011',
                 '2012',
                 '2013',
@@ -148,34 +152,134 @@
                 '2022'
             ];
 
-            var chartDescription = 'Number of joined companies per year';
+            var lineChartDescription = 'Number of joined companies per year';
 
             var numbersPerYear = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-            var chartData = {
-                labels: labels,
+            var lineChartData = {
+                labels: years,
                 datasets: [{
-                    label: chartDescription,
+                    label: lineChartDescription,
                     backgroundColor: 'rgb(255, 99, 132)',
                     borderColor: 'rgb(255, 99, 132)',
                     data: numbersPerYear,
                 }]
             };
-            var config = {
+            var lineChartConfig = {
                 type: 'line',
-                data: chartData,
+                data: lineChartData,
                 options: {}
             };
-            var myChart = new Chart(
-                document.getElementsByClassName("chart"),
-                config
-            );
+            var lineChart = new Chart(
+                document.getElementsByClassName("joined__companies__chart"),
+                lineChartConfig);
+
+            function updateNumberOfCompaniesChart(e, d) {
+
+                numbersPerYear = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+                lineChartDescription = 'Number of joined companies in ' + d.properties.name + ' per year';
+
+                for (let i = 0; i < years.length; i++) {
+                    companies.forEach(element => {
+                        if (element.Country == d.properties.name && element.dateJoined.split("/").pop() == years[i]) {
+                            numbersPerYear[i] = numbersPerYear[i] + 1;
+                        }
+                    });
+                }
+                lineChartData.datasets[0].label = lineChartDescription;
+                lineChartData.datasets[0].data = numbersPerYear;
+                lineChart.update();
+            }
+
+            function onlyUnique(value, index, self) {
+                return self.indexOf(value) === index;
+            }
+
+            var industries = [];
+            companies.forEach(element => {
+                industries.push(element.Industry);
+            });
+
+            var pieChartDescription = "Number of companies in industries";
+
+            var filteredIndustries = industries.filter(onlyUnique);
+            console.log(filteredIndustries);
+
+            var numberOfIndustryCompanies = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+            for (let i = 0; i < filteredIndustries.length; i++) {
+                companies.forEach(element => {
+                    if (element.Industry == filteredIndustries[i]) {
+                        numberOfIndustryCompanies[i] = numberOfIndustryCompanies[i] + 1;
+                    }
+                });
+            }
+
+            var industriesData = {
+                labels: filteredIndustries,
+                datasets: [{
+                    data: numberOfIndustryCompanies,
+                    backgroundColor: [
+                        "#f54242",
+                        "#f56f42",
+                        "#f5c842",
+                        "#e6f542",
+                        "#b9f542",
+                        "#7bf542",
+                        "#42f5a7",
+                        "#42f5e9",
+                        "#42b3f5",
+                        "#4263f5",
+                        "#8442f5",
+                        "#ce42f5",
+                        "#f542e6",
+                        "#f542a4",
+                        "#854900",
+                    ]
+                }],
+            };
+
+            const pieChartConfig = {
+                type: 'pie',
+                data: industriesData,
+                options: {
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        title: {
+                            display: true,
+                            text: pieChartDescription
+                        }
+                    }
+                },
+            };
+
+            var pieChart = new Chart(
+                document.getElementsByClassName("industries__chart"),
+                pieChartConfig);
+
+            function updateNumberOfIndustriesChart(e, d) {
+
+                numberOfIndustryCompanies = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+                for (let i = 0; i < filteredIndustries.length; i++) {
+                companies.forEach(element => {
+                    if (element.Country == d.properties.name && element.Industry == filteredIndustries[i]) {
+                        numberOfIndustryCompanies[i] = numberOfIndustryCompanies[i] + 1;
+                    }
+                });
+            }
+                industriesData.datasets[0].data = numberOfIndustryCompanies;
+                pieChart.update();
+            }
 
             function listCompanies(e, d) {
-                d3.select(".scrollable__container__names").selectAll("span").remove();
-                d3.select(".scrollable__container__industries").selectAll("span").remove();
-                d3.select(".scrollable__container__valuation").selectAll("span").remove();
-                d3.select(".scrollable__container__raised").selectAll("span").remove();
+                d3.select(".table__names").selectAll("span").remove();
+                d3.select(".table__industries").selectAll("span").remove();
+                d3.select(".table__valuation").selectAll("span").remove();
+                d3.select(".table__raised").selectAll("span").remove();
                 var companyNames = [];
                 var companyIndustries = [];
                 var companyValuations = [];
@@ -190,7 +294,13 @@
                     }
                 });
 
-                d3.select(".scrollable__container__names").selectAll("span")
+                if (companyNames.length > 1) {
+                    d3.selectAll("p").style("margin", "0px 4px");
+                } else {
+                    d3.selectAll("p").style("margin", "0px 20px");
+                }
+
+                d3.select(".table__names").selectAll("span")
                     .data(companyNames)
                     .enter()
                     .append("span")
@@ -207,7 +317,7 @@
                             .style('background', 'white');
                     });
 
-                d3.select(".scrollable__container__industries").selectAll("span")
+                d3.select(".table__industries").selectAll("span")
                     .data(companyIndustries)
                     .enter()
                     .append("span")
@@ -224,7 +334,7 @@
                             .style('background', 'white');
                     });
 
-                d3.select(".scrollable__container__valuation").selectAll("span")
+                d3.select(".table__valuation").selectAll("span")
                     .data(companyValuations)
                     .enter()
                     .append("span")
@@ -241,7 +351,7 @@
                             .style('background', 'white');
                     });
 
-                d3.select(".scrollable__container__raised").selectAll("span")
+                d3.select(".table__raised").selectAll("span")
                     .data(companyRaised)
                     .enter()
                     .append("span")
@@ -259,31 +369,12 @@
                     });
             }
 
-            function updateNumberOfCompaniesChart(e, d) {
-
-                numbersPerYear = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-                chartDescription = 'Number of joined companies in ' + d.properties.name + ' per year';
-
-                for (let i = 0; i < labels.length; i++) {
-                    companies.forEach(element => {
-                        if (element.Country == d.properties.name && element.dateJoined.split("/").pop() == labels[i]) {
-                            numbersPerYear[i] = numbersPerYear[i] + 1;
-                        }
-                    });
-                }
-                chartData.datasets[0].label = chartDescription;
-                chartData.datasets[0].data = numbersPerYear;
-                myChart.update();
-            }
-
             function zoomCountry(e, d) {
 
                 companies.forEach(element => {
                     if (element.Country == d.properties.name) {
                     }
                 });
-                console.log(d.properties.name);
                 const [[x0, y0], [x1, y1]] = path.bounds(d);
                 var scale_rate = Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height));
                 zoom.scaleBy(
@@ -296,11 +387,17 @@
                     1)
             }
 
+            var legendText = d3.select('body')
+                .append('span')
+                .text('Number of unicorn companies: ');
+
             var legend = d3.select('body')
-                .append('div')
+                .append('span')
                 .style("margin", "0px 1200px 0px 0px")
                 .style("background", "linear-gradient(to right, white, green)")
                 .style("display", "flex")
+                .style("border", "1px solid gray")
+                .style("min-width", "300px")
                 .style("justify-content", "space-between");
 
             var min = legend.append('span')
