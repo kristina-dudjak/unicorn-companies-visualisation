@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <link rel="stylesheet" href="style.css">
     <script src="http://d3js.org/d3.v7.min.js" charset="utf-8"></script>
@@ -13,12 +12,12 @@
         <img src="unicorn.jfif" width="40px" height="40px"></img>
         <span class="title">Unicorn companies</span>
     </div>
-    <div class="container__main" height="1000">
-        <svg class="container__main__svg" viewBox="50 50 1300 700" width="700" height="600"></svg>
+    <div class="container__main">
+        <svg class="container__main__svg" viewBox="50 50 1300 700"></svg>
         <div class="container__companies">
-            <div class="container__companies__charts" width="900">
-                <canvas class="joined__companies__chart" width="400" height="300"></canvas>
-                <canvas class="industries__chart" width="400" height="300"></canvas>
+            <div class="container__companies__charts" >
+                <canvas class="joined__companies__chart"></canvas>
+                <canvas class="industries__chart"></canvas>
             </div>
             <div class="container__companies__table">
                 <div class="table__names">
@@ -35,17 +34,18 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <script type="module">
 
         var svg = d3.select(".container__main__svg");
 
+        var selectedCountry = "";
+
         var g = svg.append("g");
 
         var projection = d3.geoEquirectangular()
-            .center([-60, 40])
+            .center([-50, 40])
             .scale(150);
 
         var path = d3.geoPath()
@@ -130,10 +130,17 @@
                 .style("stroke-width", 1)
                 .style("stroke-opacity", 1)
                 .on("click", (e, d) => {
-                    zoomCountry(e, d);
-                    updateNumberOfCompaniesChart(e, d);
-                    updateNumberOfIndustriesChart(e, d);
-                    listCompanies(e, d);
+                    var name = d.properties.name;
+                    if (selectedCountry == name) {
+                        selectedCountry = null;
+                        zoomOut();
+                    } else {
+                        selectedCountry = name;
+                        zoomCountry(e, d);
+                        updateNumberOfCompaniesChart(e, d);
+                        updateNumberOfIndustriesChart(e, d);
+                        listCompanies(e, d);
+                    }
                 })
                 ;
 
@@ -153,7 +160,6 @@
             ];
 
             var lineChartDescription = 'Number of joined companies per year';
-
             var numbersPerYear = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
             var lineChartData = {
@@ -265,12 +271,12 @@
                 numberOfIndustryCompanies = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
                 for (let i = 0; i < filteredIndustries.length; i++) {
-                companies.forEach(element => {
-                    if (element.Country == d.properties.name && element.Industry == filteredIndustries[i]) {
-                        numberOfIndustryCompanies[i] = numberOfIndustryCompanies[i] + 1;
-                    }
-                });
-            }
+                    companies.forEach(element => {
+                        if (element.Country == d.properties.name && element.Industry == filteredIndustries[i]) {
+                            numberOfIndustryCompanies[i] = numberOfIndustryCompanies[i] + 1;
+                        }
+                    });
+                }
                 industriesData.datasets[0].data = numberOfIndustryCompanies;
                 pieChart.update();
             }
@@ -370,18 +376,21 @@
             }
 
             function zoomCountry(e, d) {
-
-                companies.forEach(element => {
-                    if (element.Country == d.properties.name) {
-                    }
-                });
                 const [[x0, y0], [x1, y1]] = path.bounds(d);
                 var scale_rate = Math.min(8, 0.9 / Math.max((x1 - x0) / width, (y1 - y0) / height));
                 zoom.scaleBy(
                     g.transition().duration(750)
                         .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(" + scale_rate + ")translate(" + -(x0 + x1) / 2 + "," + -(y0 + y1) / 2 + ")")
                         .transition()
-                        .delay(2000)
+                     .delay(60000)
+                     .attr("transform", "translate(" + width + "," + height + ")scale(" + 1 + ")translate(" + width + "," + height + ")")
+                    ,
+                    1)
+            }
+
+            function zoomOut() {
+                zoom.scaleBy(
+                    g.transition().duration(750)
                         .attr("transform", "translate(" + width + "," + height + ")scale(" + 1 + ")translate(" + width + "," + height + ")")
                     ,
                     1)
@@ -389,11 +398,12 @@
 
             var legendText = d3.select('body')
                 .append('span')
+                .style("margin", "10px")
                 .text('Number of unicorn companies: ');
 
             var legend = d3.select('body')
                 .append('span')
-                .style("margin", "0px 1200px 0px 0px")
+                .style("margin", "0px 1200px 0px 10px")
                 .style("background", "linear-gradient(to right, white, green)")
                 .style("display", "flex")
                 .style("border", "1px solid gray")
